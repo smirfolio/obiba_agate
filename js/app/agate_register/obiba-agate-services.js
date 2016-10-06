@@ -2,19 +2,14 @@
  * @file
  * Obiba Agate Module AngularJs App Service.
  */
-
-'use strict';
-
 (function ($) {
-  Drupal.behaviors.obiba_agate_register_services = {
-    attach: function (context, settings) {
+'use strict';
 
       mica.agateRegister.factory('UserResourceJoin', ['$http',
         function ($http) {
-          var drupalPathResource = Drupal.settings.basePath + 'agate/agate_user_join/ws';
           return {
             post: function (data) {
-              return $http.post(drupalPathResource, $.param(data), {
+              return $http.post(Drupal.settings.basePath + Drupal.settings.pathPrefix + 'agate/agate_user_join/ws', $.param(data), {
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'}
               });
             }
@@ -22,12 +17,11 @@
         }])
         .factory('AgateJoinFormResource', ['$resource',
           function ($resource) {
-            return $resource(Drupal.settings.basePath + 'agate/agate-form/ws', {}, {
+            return $resource(Drupal.settings.basePath + Drupal.settings.pathPrefix + 'agate/agate-form/ws?locale=' + Drupal.settings.angularjsApp.locale, {}, {
               'get': {
-                method: 'GET', errorHandler: true
+                method: 'GET', errorHandler: true, params: {locale: Drupal.settings.angularjsApp.locale}
               }
             });
           }]);
-    }
-  }
+
 }(jQuery));

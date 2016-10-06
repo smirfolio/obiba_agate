@@ -10,12 +10,12 @@
 
       mica.agateProfile.controller('ModalPasswordUpdateController',
         ['$scope',
-          '$modalInstance',
+          '$uibModalInstance',
           'userId',
           'AlertService',
           'AgateUserPassword',
           function ($scope,
-                    $modalInstance,
+                    $uibModalInstance,
                     userId,
                     AlertService,
                     AgateUserPassword) {
@@ -25,7 +25,8 @@
                 AlertService.alert({
                   id: 'ModalPasswordUpdateController',
                   type: 'danger',
-                  msg: Drupal.t('The password and its confirmation do not match!')
+                  msg: Drupal.t('The password and its confirmation do not match!'),
+                  delay: 3000
                 });
               } else {
                 AgateUserPassword.save('', {
@@ -36,15 +37,17 @@
                       AlertService.alert({
                         id: 'ModalPasswordUpdateController',
                         type: 'danger',
-                        msg: Drupal.t('Server Error :') + response.errorServer
+                        msg: Drupal.t('Server Error :') + response.errorServer,
+                        delay: 3000
                       });
                     } else {
                       AlertService.alert({
-                        id: 'MainController',
+                        id: 'UserProfile',
                         type: 'success',
-                        msg: Drupal.t('The changes have been saved.')
+                        msg: Drupal.t('The changes have been saved.'),
+                        delay: 3000
                       });
-                      $modalInstance.close();
+                      $uibModalInstance.close();
                     }
                   }
                 );
@@ -52,7 +55,7 @@
             };
 
             $scope.cancel = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 
@@ -62,13 +65,13 @@
         '$sce',
         'AgateFormResource',
         'AgateUserProfile',
-        '$modal',
+        '$uibModal',
         function ($rootScope,
                   $scope,
                   $sce,
                   AgateFormResource,
                   AgateUserProfile,
-                  $modal) {
+                  $uibModal) {
 
           AgateFormResource.get(function onSuccess(FormResources) {
             $scope.model = {};
@@ -84,16 +87,16 @@
               /*********U P D A T E    P A S S W O R D   U S E R ********************/
 
               $scope.updatePasswordUser = function () {
-                var modalInstance = $modal.open({
-                  templateUrl: Drupal.settings.basePath + 'obiba_mica_app_angular/obiba_agate/obiba-agate-user-update-password-modal',
+                var locatedPathUrl = Drupal.settings.basePath + Drupal.settings.pathPrefix;
+                $uibModal.open({
+                  templateUrl: locatedPathUrl + 'obiba_mica_app_angular_view_template/obiba-agate-user-update-password-modal',
                   controller: 'ModalPasswordUpdateController',
                   resolve: {
                     userId: function () {
                       return $scope.model.username;
                     }
                   }
-                });
-                modalInstance.result.then(function (data) {
+                }).result.then(function (data) {
                   $scope.profile = data;
                 }, function () {
                   console.log('Modal dismissed at: ' + new Date());
@@ -110,11 +113,13 @@
         'AlertService',
         'AgateUserProfile',
         'AgateFormResource',
+        '$sce',
         function ($scope,
                   $location,
                   AlertService,
                   AgateUserProfile,
-                  AgateFormResource) {
+                  AgateFormResource,
+                  $sce) {
           AgateFormResource.get(
             function onSuccess(AgateProfileForm) {
               $scope.model = {};
@@ -129,25 +134,27 @@
                 $scope.model = userProfile.userProfile;
 
               });
-
+              $scope.ClientProfileEditForm = $sce.trustAsHtml(Drupal.settings.agateParam.ClientProfileEditForm);
               $scope.onSubmit = function (form) {
                 $scope.$broadcast('schemaFormValidate');
                 if (form.$valid) {
                   AgateUserProfile.save($scope.model, function (response) {
                     response.locationRedirection = response.locationRedirection ? response.locationRedirection : 'view';
-                    if (response && ! response.errorServer) {
+                    if (response && !response.errorServer) {
                       AlertService.alert({
-                        id: 'MainController',
+                        id: 'UserProfile',
                         type: 'success',
-                        msg: Drupal.t('The changes have been saved.')
+                        msg: Drupal.t('The changes have been saved.'),
+                        delay: 3000
                       });
 
                     }
                     else {
                       AlertService.alert({
-                        id: 'MainController',
+                        id: 'UserProfile',
                         type: 'warning',
-                        msg: response.errorServer
+                        msg: response.errorServer,
+                        delay: 3000
                       });
                     }
                     $location.path(response.locationRedirection).replace();

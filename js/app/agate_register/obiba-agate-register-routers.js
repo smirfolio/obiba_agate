@@ -5,19 +5,16 @@
 
 'use strict';
 
-(function ($) {
-  Drupal.behaviors.obiba_agate_register_routes = {
-    attach: function (context, settings) {
+
 
       mica.agateRegister.config(['$routeProvider', '$locationProvider',
         function ($routeProvider, $locationProvider) {
+          var locatedBaseUrl = Drupal.settings.basePath + Drupal.settings.pathPrefix ;
           $routeProvider
             .when('/join', {
-              templateUrl: Drupal.settings.basePath + 'obiba_mica_app_angular/obiba_gate/obiba_agate-user-profile-register-form',
+              templateUrl: locatedBaseUrl  + 'obiba_mica_app_angular_view_template/obiba_agate-user-profile-register-form',
               controller: 'RegisterFormController'
             });
         }]);
 
-    }
-  }
-}(jQuery));
+

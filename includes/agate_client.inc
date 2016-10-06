@@ -17,7 +17,11 @@ class ObibaAgateClient {
 
   const SET_COOKIE_HEADER = 'Set-Cookie';
 
+  const AGATE_JUST_LOGGED_IN = 'agatein';
+
   const OBIBA_COOKIE = 'obibaid';
+
+  const OBIBA_COOKIE_OBJECT = 'obibaid_object';
 
   const HEADER_JSON = 'application/json';
 
@@ -42,7 +46,7 @@ class ObibaAgateClient {
    *   Return the stored Obiba Cookie.
    */
   public static function hasTicket() {
-    return isset($_SESSION[self::OBIBA_COOKIE]);
+    return isset($_SESSION[self::OBIBA_COOKIE]) && isset($_SESSION[self::OBIBA_COOKIE_OBJECT]);
   }
 
   /**
@@ -125,6 +129,9 @@ class ObibaAgateClient {
   public function getConfigFormJoin() {
     $this->lastResponse = NULL;
     $url = $this->agateUrl . '/config/join';
+    if (array_key_exists('locale', drupal_get_query_parameters())) {
+      $url .= '?locale=' . drupal_get_query_parameters()['locale'];
+    }
     $request = new HttpClientRequest($url, array(
       'method' => HttpClientRequest::METHOD_GET,
       'headers' => array(
@@ -249,14 +256,16 @@ class ObibaAgateClient {
       return TRUE;
     }
     catch (HttpClientException $e) {
+      $error_message = json_decode($e->getResponse()->body);
       watchdog('Agate Client', 'Request failed, @code: @message',
         array(
           '@code' => $e->getCode(),
           '@message' => $e->getMessage(),
         ), WATCHDOG_WARNING);
+      drupal_add_http_header('Status', $e->getCode());
       return array(
         'codeError' => $e->getCode(),
-        'message' => $e->getResponse()->body,
+        'message' => $error_message->message,
       );
     }
   }
@@ -507,10 +516,16 @@ class ObibaAgateClient {
       if (empty($value)) {
         if (!empty($_SESSION[$name])) {
           unset($_SESSION[$name]);
+          if ($name === self::OBIBA_COOKIE) {
+            unset($_SESSION[self::OBIBA_COOKIE_OBJECT]);
+          }
         }
       }
       else {
         $_SESSION[$name] = $value;
+        if ($name === self::OBIBA_COOKIE) {
+          $_SESSION[self::OBIBA_COOKIE_OBJECT] = $cookie;
+        }
       }
     }
   }
@@ -527,8 +542,12 @@ class ObibaAgateClient {
   protected function parseCookie($cookie_str) {
     $cookie = array();
     foreach (explode(';', $cookie_str) as $entry_str) {
-      $entry = explode('=', $entry_str);
-      $cookie[$entry[0]] = $entry[1];
+      if (strpos($entry_str,'=')) {
+        $entry = explode('=', $entry_str);
+        $cookie[$entry[0]] = $entry[1];
+      } else {
+        $cookie[$entry_str] = TRUE;
+      }
     }
     return $cookie;
   }

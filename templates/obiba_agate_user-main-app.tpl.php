@@ -12,4 +12,6 @@
 
 ?>
 
-<?php print render($main_app); ?>
+<obiba-alert id="UserProfile"></obiba-alert>
+<div ng-view="">
+</div>
